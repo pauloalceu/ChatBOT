@@ -1,0 +1,294 @@
+ <html>
+
+
+<script>
+//Validando XML
+var xt="",h3OK=1
+function checkErrorXML(x)
+{
+	xt=""
+	h3OK=1
+	checkXML(x)
+}
+//Validando XML
+function checkXML(n)
+{
+	var l,i,nam
+	nam=n.nodeName
+	if (nam=="h3")
+		{
+		if (h3OK==0)
+			{
+			return;
+			}
+		h3OK=0
+		}
+	if (nam=="#text")
+		{
+		xt=xt + n.nodeValue + "\n"
+		}
+	l=n.childNodes.length
+	for (i=0;i<l;i++)
+		{
+		checkXML(n.childNodes[i])
+		}
+}
+
+//Validando XML
+function validateXML(xmlDoc)
+{
+	// código para IE
+	if (window.ActiveXObject)
+	  {
+	  xmlDoc.async=false;
+	  xmlDoc.loadXML(document.all("validxml").value);
+
+	  if(xmlDoc.parseError.errorCode!=0)
+		{
+		txt="Error Code: " + xmlDoc.parseError.errorCode + "\n";
+		txt=txt+"Error Reason: " + xmlDoc.parseError.reason;
+		txt=txt+"Error Line: " + xmlDoc.parseError.line;
+		alert(txt); //Exibe erro do XML
+		}
+	  }
+	// código para Mozilla, Firefox, Opera, etc.
+	else if (document.implementation && document.implementation.createDocument)
+	  {
+	if (xmlDoc.getElementsByTagName("parsererror").length>0)
+		{
+		checkErrorXML(xmlDoc.getElementsByTagName("parsererror")[0]);
+		alert(xt) //Exibe erro do XML
+		}
+	  }
+	else
+	  {
+		//alert('Your browser cannot handle this script');
+		alert('Seu navegador não suporta esse script');
+	  }
+}
+
+//Função para pegar objetos por ID
+function pega(id){
+	return document.getElementById(id);
+}
+
+function Trim(str){return str.replace(/^\s+|\s+$/g,"");}
+
+function envia(valor){
+	valor = Trim(valor); //Retira espaços em branco no início e no fim...
+	if (valor==""){
+		pega("resposta").innerHTML= pega_valor_randomico('response_empty');
+	}
+	else{
+		if (pega_valor("uppercase") == 'true'){
+			valor =  valor.toUpperCase();
+		}
+
+		//Substituindo STRINGS
+		var x=xmlDoc.getElementsByTagName("replacements");
+		  for (i=0;i<x.length;i++) {
+				z = x.item(0).getElementsByTagName("rep");
+				for (j=0;j<z.length;j++) {
+					valor = valor.replace(z[j].getAttribute('find').toUpperCase(), z[j].getAttribute('replace').toUpperCase()); 
+				}
+		  }
+		//Substituindo STRINGS
+		  
+		valor = procura(valor);
+		if (valor != ""){
+			pega("resposta").innerHTML= valor;	
+		}else{
+			pega("resposta").innerHTML= pega_valor_randomico('response_not_found');
+		}
+	}
+}
+
+function procura(valor){
+	//procurando STRINGS
+	var m=xmlDoc.getElementsByTagName("category");
+	for (n=0;n<m.length;n++) {
+		x = m.item(0).getElementsByTagName("syntatic");
+		  for (i=0;i<x.length;i++) {
+				z = x.item(0).getElementsByTagName("s");
+				for (j=0;j<z.length;j++) {
+					if (compara(z[j].childNodes[0].nodeValue.toUpperCase(),valor.toUpperCase())){		//Encontrou syntatic de acordo
+					
+						
+					
+					
+						xx = m.item(0).getElementsByTagName("semantic"); //pegando response dentro de semantic
+						zz = xx.item(0).getElementsByTagName("response");
+						valor3 = Math.floor((Math.random() * (zz.length + 1)));
+						return zz[valor3].childNodes[0].nodeValue;				
+						
+						
+						
+						
+						
+						//return extrai(z[j].childNodes[0].nodeValue.toUpperCase(),valor.toUpperCase());
+						
+					}
+				}
+		  }
+	}
+	//procurando STRINGS
+	return "";
+}
+
+function pega_valor(tag){
+	return xmlDoc.getElementsByTagName(tag)[0].childNodes[0].nodeValue;;
+}
+
+function pega_valor_randomico(tag){
+	var x=xmlDoc.getElementsByTagName(tag);
+	valor = Math.floor((Math.random() * (x.length + 1)));
+	return x[valor].childNodes[0].nodeValue;
+}
+
+function contar(tag){
+	var x=xmlDoc.getElementsByTagName(tag);
+	return x.length;
+}
+
+//Usado para substituir toda a string
+function replaceAll(str, de, para){
+	var pos = str.indexOf(de);
+	while (pos > -1){
+	str = str.replace(de, para);
+	pos = str.indexOf(de);
+	}
+	return (str);
+}
+
+
+
+
+//Retorna array dos *
+//Exemplo
+//var dados = extrai('* lucas * caio *',"asdasd lucas sas caio ads asl");
+//alert(dados[3]);	
+function extrai(trigger, message){
+
+trigger=replaceAll(trigger,"*", "%%%%");
+trigger=replaceAll(trigger,"%%%%", "(.*?)");
+var re = new RegExp("^" + trigger + "$");
+
+if (message.match(re)) {
+	return re.exec(message);
+}
+else {
+     return false;
+}
+
+}
+
+
+
+//Compara strings com asterisco * com textos
+//Exemplo
+//alert(compara('* lucas * caio *',"asdasd lucas sas caio ads asl"));
+function compara(trigger, message){
+
+trigger=replaceAll(trigger,"*", "%%%%");
+trigger=replaceAll(trigger,"%%%%", "(.*?)");
+var re = new RegExp("^" + trigger + "$");
+
+if (message.match(re)) {
+     return true;
+}
+else {
+     return false;
+}
+
+}
+
+function carrega(arquivoXML){
+	//Abrindo XML
+	if (window.XMLHttpRequest){
+	xmlhttp=new XMLHttpRequest();  //código para
+	}else{
+	xhttp=new ActiveXObject("Microsoft.XMLHTTP");  // código para IE5 and IE6
+	}
+	xmlhttp.open("GET",arquivoXML,false);
+	xmlhttp.send();
+	xmlDoc=xmlhttp.responseXML;   
+
+	//Verificando erros no XML, se tiver dá um alert
+	validateXML(xmlDoc);
+
+	//Monstrando todas as TAGs
+	/*var x=xmlDoc.getElementsByTagName("s");
+
+	for (i=0;i<x.length;i++)
+	  {
+		pega("teste").innerHTML+=(x[i].childNodes[0].nodeValue);
+		pega("teste").innerHTML+=("<br>");
+	  } */
+	  
+	  
+
+//alert(compara('* lucas * caio *',"asdasd lucas sas caio ads asl"));
+
+//var dados = extrai('* lucas * caio *',"asdasd lucas sas caio ads asl");
+//alert(dados[3]);	  
+
+
+	//Contando todas as TAGs
+	pega("quant_response").innerHTML= contar("response");
+
+	//Contando todas as TAGs
+	pega("quant_category").innerHTML= contar("category");
+	
+	//Contando todas as TAGs
+	pega("quant_response_not_found").innerHTML= contar("response_not_found");
+	
+	//Contando todas as TAGs
+	pega("quant_response_empty").innerHTML= contar("response_empty");
+	
+	//Contando todas as TAGs
+	pega("quant_replacements").innerHTML= contar("rep");
+	
+	
+
+	
+	//Pega valor
+	pega("uppercase").innerHTML= pega_valor("uppercase");
+		  
+	//Monstrando TAG específica
+	pega("comment").innerHTML= xmlDoc.getElementsByTagName("comment")[0].childNodes[0].nodeValue;
+}
+</script>
+
+
+<body onload="carrega('example_SAIML.xml');">
+<h1>Semantic AIML - Program JS - V.0.04</h1>
+
+<form name="catbot"  method="post">
+<b>Resposta:</b> <span id="resposta"></span><br />
+<b>Mensagem:</b>
+<input type="text" name="msg" id="msg" size="25" class="text">
+<input type="button" name="submit" value="Envia" class="bttn" onclick="envia(pega('msg').value);">
+</form>
+
+</br></br>
+Semantic AIML - Program JS - V.0.01 - Inciando</br>
+Semantic AIML - Program JS - V.0.02 - Definindo xml, validando, replaces</br>
+Semantic AIML - Program JS - V.0.03 - Contagem do xml</br>
+Semantic AIML - Program JS - V.0.04 - JS de pesquisa com expresão regular</br></br>
+
+<div>
+XML Metadata:</br>
+<b>comment:</b> <span id="comment"></span><br />
+<b>uppercase:</b> <span id="uppercase"></span><br />
+<b>quant of responses:</b> <span id="quant_response"></span><br />
+<b>quant of category:</b> <span id="quant_category"></span><br />
+<b>quant of response not found:</b> <span id="quant_response_not_found"></span><br />
+<b>quant of response empty:</b> <span id="quant_response_empty"></span><br />
+<b>quant of replacements:</b> <span id="quant_replacements"></span><br />
+
+<!--<b>Teste:</b> <span id="teste"></span>-->
+</div>
+
+
+</body>
+</html> 
